@@ -123,12 +123,18 @@ fn main() {
 
     let cfg = config::Config::load();
     let fullscreen = cfg.start_fullscreen && !args.windowed;
-    let viewport = eframe::egui::ViewportBuilder::default()
+    let mut viewport = eframe::egui::ViewportBuilder::default()
         .with_title("CDisplay")
+        // Matches cdisplay-rs.desktop, so Wayland/X11 docks show the right icon.
+        .with_app_id("cdisplay-rs")
         .with_inner_size([1100.0, 800.0])
         .with_min_inner_size([320.0, 240.0])
         .with_fullscreen(fullscreen)
         .with_drag_and_drop(true);
+    match eframe::icon_data::from_png_bytes(include_bytes!("../packaging/icons/cdisplay-rs-256.png")) {
+        Ok(icon) => viewport = viewport.with_icon(icon),
+        Err(e) => log::warn!("window icon: {e}"),
+    }
     let options = eframe::NativeOptions {
         viewport,
         ..Default::default()

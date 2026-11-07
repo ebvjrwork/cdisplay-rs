@@ -68,7 +68,8 @@ jobs:
           mkdir -p dist
           name="cdisplay-rs-$VERSION-x86_64-linux"
           mkdir "$name"
-          cp target/release/cdisplay-rs README.md LICENSE packaging/cdisplay-rs.desktop "$name/"
+          cp target/release/cdisplay-rs README.md LICENSE packaging/cdisplay-rs.desktop \
+            packaging/icons/cdisplay-rs.svg packaging/icons/cdisplay-rs-256.png "$name/"
           tar -czf "dist/$name.tar.gz" "$name"
           cargo deb --no-build --locked --output dist/
           cargo generate-rpm --output dist/
@@ -141,6 +142,7 @@ jobs:
           app=staging/CDisplay.app
           mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources" dist
           cp cdisplay-rs "$app/Contents/MacOS/"
+          cp packaging/icons/cdisplay-rs.icns "$app/Contents/Resources/"
           sed "s/@VERSION@/$VERSION/g" packaging/macos/Info.plist > "$app/Contents/Info.plist"
           plutil -lint "$app/Contents/Info.plist"
           # Ad-hoc signature (free). Not notarized: see the release notes for first launch.

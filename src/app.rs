@@ -30,7 +30,7 @@ Reading
   Arrow keys                       Scroll; Left/Right turn pages when nothing to scroll
   Home / End                       First / last page
   P / Shift+P                      Go to page: thumbnails / slider
-  A                                Automatic slideshow
+  A                                Automatic slideshow (advances like Space)
 
 Files
   L                                Load files
@@ -215,6 +215,8 @@ pub struct App {
     max_side: u32,
     title: String,
     last_view: Rect,
+    /// Scroll range of the last drawn frame (used by the slideshow).
+    last_max_scroll: Vec2,
 }
 
 impl App {
@@ -243,6 +245,7 @@ impl App {
             max_side,
             title: String::new(),
             last_view: Rect::NOTHING,
+            last_max_scroll: Vec2::ZERO,
         };
         if let Some(p) = start.path {
             app.open_path(&cc.egui_ctx, p, start.page);
@@ -885,24 +888,7 @@ impl App {
                     self.prev_from_end();
                     return None;
                 }
-                if self.scroll.y < max.y - 0.5 {
-                    self.scroll.y += view.height() * 0.9;
-                    return None;
-                }
-                // Then across: left-to-right, or right-to-left in Japanese mode.
-                let across_left = if jp { self.scroll.x > 0.5 } else { false };
-                let across_right = if jp {
-                    false
-                } else {
-                    self.scroll.x < max.x - 0.5
-                };
-                if across_left || across_right {
-                    self.scroll.x += if jp {
-                        -view.width() * 0.9
-                    } else {
-                        view.width() * 0.9
-                    };
-                    self.scroll.y = 0.0;
+                if self.space_scroll(view, max) {
                     return None;
                 }
                 Cmd::Next
@@ -943,6 +929,23 @@ impl App {
             Key::F11 => Cmd::ToggleWindowed,
             _ => return None,
         })
+    }
+
+    /// The scrolling half of Space: down, then across. Returns false when the
+    /// whole page has been seen and it is time to turn the page.
+    fn space_scroll(&mut self, view: Rect, max: Vec2) -> bool {
+        match layout::space_step(
+            (self.scroll.x, self.scroll.y),
+            (view.width(), view.height()),
+            (max.x, max.y),
+            self.cfg.japanese_mode,
+        ) {
+            layout::SpaceStep::Scroll(x, y) => {
+                self.scroll = vec2(x, y);
+                true
+            }
+            layout::SpaceStep::NextPage => false,
+        }
     }
 
     fn prev_from_end(&mut self) {
@@ -1127,6 +1130,7 @@ impl App {
                 self.run(&ctx, c);
             }
         });
+        self.last_max_scroll = max_scroll;
         self.handle_keys(&ctx, view, max_scroll);
     }
 
@@ -1967,11 +1971,14 @@ impl eframe::App for App {
         if let Some(t) = self.slideshow {
             let period = Duration::from_secs_f32(self.cfg.slideshow_seconds.max(0.5));
             if t.elapsed() >= period {
-                if self.next() {
-                    self.slideshow = Some(Instant::now());
+                // Advance exactly like pressing Space: read the whole page, then turn it.
+                let more = if self.space_scroll(self.last_view, self.last_max_scroll) {
+                    ctx.request_repaint();
+                    true
                 } else {
-                    self.slideshow = None;
-                }
+                    self.next()
+                };
+                self.slideshow = more.then(Instant::now);
             }
             ctx.request_repaint_after(Duration::from_millis(200));
         }

@@ -31,6 +31,41 @@ default = []
 # AVIF decoding needs the system dav1d library (libdav1d-dev) at build time.
 avif = ["image/avif-native"]
 
+# --- Linux packages (built by .github/workflows/release.yml) ---
+# libxkbcommon-x11 and EGL are loaded at runtime with dlopen, so the automatic
+# dependency scan cannot see them; they are listed by hand.
+
+[package.metadata.deb]
+maintainer = "Eduardo Villena <ebvjr@captivatechat.ai>"
+section = "graphics"
+priority = "optional"
+depends = "$auto, libxkbcommon-x11-0, libegl1"
+recommends = "unar"
+extended-description = """\
+Keyboard-first, full-screen viewer for comic archives (CBZ/ZIP, CBR/RAR, CB7/7z, \
+CBT/TAR, CBA/ACE via unar) and image folders. Supports JPEG, PNG, GIF, BMP, WebP, \
+JPEG XL, TIFF and more, with CDisplay's colour balance, gamma and yellow reduction."""
+assets = [
+    ["target/release/cdisplay-rs", "usr/bin/", "755"],
+    ["packaging/cdisplay-rs.desktop", "usr/share/applications/", "644"],
+    ["README.md", "usr/share/doc/cdisplay-rs/README.md", "644"],
+]
+
+[package.metadata.generate-rpm]
+assets = [
+    { source = "target/release/cdisplay-rs", dest = "/usr/bin/cdisplay-rs", mode = "755" },
+    { source = "packaging/cdisplay-rs.desktop", dest = "/usr/share/applications/cdisplay-rs.desktop", mode = "644" },
+    { source = "README.md", dest = "/usr/share/doc/cdisplay-rs/README.md", mode = "644", doc = true },
+    { source = "LICENSE", dest = "/usr/share/licenses/cdisplay-rs/LICENSE", mode = "644", doc = true },
+]
+
+[package.metadata.generate-rpm.requires]
+"libxkbcommon-x11.so.0()(64bit)" = "*"
+"libEGL.so.1()(64bit)" = "*"
+
+[package.metadata.generate-rpm.recommends]
+unar = "*"
+
 [profile.release]
 lto = "thin"
 codegen-units = 4

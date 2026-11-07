@@ -98,6 +98,19 @@ jobs:
         run: cargo test --release --locked
       - name: Build
         run: cargo build --release --locked
+      - name: Smoke test (starts without a GPU)
+        shell: pwsh
+        run: |
+          # Hosted runners have no GPU, like many VMs and Remote Desktop sessions,
+          # so this catches builds that cannot start there. Logs the graphics backend.
+          $env:RUST_LOG = "info,egui_glow=debug,egui_wgpu=debug"
+          $p = Start-Process -FilePath target/release/cdisplay-rs.exe -ArgumentList "--windowed" `
+                 -RedirectStandardError smoke-err.log -RedirectStandardOutput smoke-out.log -PassThru
+          Start-Sleep -Seconds 10
+          $alive = -not $p.HasExited
+          if ($alive) { Stop-Process -Id $p.Id -Force }
+          Get-Content smoke-err.log, smoke-out.log -ErrorAction SilentlyContinue | Select-Object -First 80
+          if (-not $alive) { throw "cdisplay-rs exited during startup (exit code $($p.ExitCode))" }
       - name: Package
         shell: pwsh
         run: |

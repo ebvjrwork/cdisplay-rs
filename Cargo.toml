@@ -2,7 +2,7 @@
 name = "cdisplay-rs"
 description = "A Rust port of the classic CDisplay sequential image (comic) viewer"
 license = "MIT"
-version = "0.0.2"
+version = "0.0.3"
 edition = "2024"
 rust-version = "1.88"
 
@@ -26,6 +26,10 @@ toml = "1.2.1"
 unrar = "0.5.8"
 zip = { version = "9.4.1", default-features = false, features = ["deflate", "deflate64", "bzip2", "zstd", "lzma"] }
 
+# Embeds the icon into the .exe (see build.rs).
+[target.'cfg(windows)'.build-dependencies]
+winresource = { version = "0.1.34", default-features = false }
+
 [features]
 default = []
 # AVIF decoding needs the system dav1d library (libdav1d-dev) at build time.
@@ -48,6 +52,8 @@ JPEG XL, TIFF and more, with CDisplay's colour balance, gamma and yellow reducti
 assets = [
     ["target/release/cdisplay-rs", "usr/bin/", "755"],
     ["packaging/cdisplay-rs.desktop", "usr/share/applications/", "644"],
+    ["packaging/icons/cdisplay-rs.svg", "usr/share/icons/hicolor/scalable/apps/", "644"],
+    ["packaging/icons/cdisplay-rs-256.png", "usr/share/icons/hicolor/256x256/apps/cdisplay-rs.png", "644"],
     ["README.md", "usr/share/doc/cdisplay-rs/README.md", "644"],
 ]
 
@@ -55,6 +61,8 @@ assets = [
 assets = [
     { source = "target/release/cdisplay-rs", dest = "/usr/bin/cdisplay-rs", mode = "755" },
     { source = "packaging/cdisplay-rs.desktop", dest = "/usr/share/applications/cdisplay-rs.desktop", mode = "644" },
+    { source = "packaging/icons/cdisplay-rs.svg", dest = "/usr/share/icons/hicolor/scalable/apps/cdisplay-rs.svg", mode = "644" },
+    { source = "packaging/icons/cdisplay-rs-256.png", dest = "/usr/share/icons/hicolor/256x256/apps/cdisplay-rs.png", mode = "644" },
     { source = "README.md", dest = "/usr/share/doc/cdisplay-rs/README.md", mode = "644", doc = true },
     { source = "LICENSE", dest = "/usr/share/licenses/cdisplay-rs/LICENSE", mode = "644", doc = true },
 ]

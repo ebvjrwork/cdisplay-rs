@@ -10,6 +10,8 @@
 	<string>io.github.ebvjrwork.cdisplay-rs</string>
 	<key>CFBundleExecutable</key>
 	<string>cdisplay-rs</string>
+	<key>CFBundleIconFile</key>
+	<string>cdisplay-rs</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleInfoDictionaryVersion</key>

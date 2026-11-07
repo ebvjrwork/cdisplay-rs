@@ -1,0 +1,40 @@
+[package]
+name = "cdisplay-rs"
+description = "A Rust port of the classic CDisplay sequential image (comic) viewer"
+license = "MIT"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.88"
+
+[dependencies]
+anyhow = "1.0.104"
+arboard = "3.7.0"
+crossbeam-channel = "0.5.17"
+directories = "6.0.0"
+eframe = { version = "0.37", default-features = false, features = ["default_fonts", "glow", "wayland", "x11"] }
+env_logger = "0.11.11"
+image = { version = "0.25.10", default-features = false, features = ["jpeg", "png", "gif", "bmp", "webp", "tiff", "tga", "ico", "pnm", "qoi", "rayon"] }
+jxl-oxide = { version = "0.12.6", features = ["image"] }
+log = "0.4.35"
+natord = "1.0.9"
+rfd = "0.18.0"
+serde = { version = "1.0.229", features = ["derive"] }
+sevenz-rust2 = "0.25.0"
+tar = "0.4.46"
+tempfile = "3.27.0"
+toml = "1.2.1"
+unrar = "0.5.8"
+zip = { version = "9.4.1", default-features = false, features = ["deflate", "deflate64", "bzip2", "zstd", "lzma"] }
+
+[features]
+default = []
+# AVIF decoding needs the system dav1d library (libdav1d-dev) at build time.
+avif = ["image/avif-native"]
+
+[profile.release]
+lto = "thin"
+codegen-units = 4
+strip = true
+
+[profile.dev.package."*"]
+opt-level = 2

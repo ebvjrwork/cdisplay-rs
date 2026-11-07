@@ -193,6 +193,36 @@ pub fn prev_page(
     Some(current.first - 1)
 }
 
+/// What one press of Space does next.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum SpaceStep {
+    /// Scroll to this (x, y) offset.
+    Scroll(f32, f32),
+    NextPage,
+}
+
+/// Space (and each automatic-slideshow tick): scroll down a screen; at the
+/// bottom move one screen across (right, or left in Japanese mode) and back to
+/// the top; once the whole page has been seen, turn the page. `scroll`, `view`
+/// and `max` are (x, y) in screen points.
+pub fn space_step(
+    scroll: (f32, f32),
+    view: (f32, f32),
+    max: (f32, f32),
+    japanese: bool,
+) -> SpaceStep {
+    let (x, y) = scroll;
+    if y < max.1 - 0.5 {
+        return SpaceStep::Scroll(x, y + view.1 * 0.9);
+    }
+    let more_across = if japanese { x > 0.5 } else { x < max.0 - 0.5 };
+    if more_across {
+        let dx = view.0 * 0.9;
+        return SpaceStep::Scroll(if japanese { x - dx } else { x + dx }, 0.0);
+    }
+    SpaceStep::NextPage
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -286,5 +316,23 @@ mod tests {
             ),
             None
         );
+    }
+
+    #[test]
+    fn space_reads_down_then_across_then_turns_page() {
+        let view = (100.0, 100.0);
+        // Page fits the screen: straight to the next page.
+        assert_eq!(space_step((0.0, 0.0), view, (0.0, 0.0), false), SpaceStep::NextPage);
+        // Tall page: down a screen (90%), then next page once at the bottom.
+        let tall = (0.0, 150.0);
+        assert_eq!(space_step((0.0, 0.0), view, tall, false), SpaceStep::Scroll(0.0, 90.0));
+        assert_eq!(space_step((0.0, 150.0), view, tall, false), SpaceStep::NextPage);
+        // Wide and tall: at the bottom, move one screen right and back to the top.
+        let big = (150.0, 150.0);
+        assert_eq!(space_step((0.0, 150.0), view, big, false), SpaceStep::Scroll(90.0, 0.0));
+        assert_eq!(space_step((150.0, 150.0), view, big, false), SpaceStep::NextPage);
+        // Japanese mode reads right to left: move left, finish at x = 0.
+        assert_eq!(space_step((150.0, 150.0), view, big, true), SpaceStep::Scroll(60.0, 0.0));
+        assert_eq!(space_step((0.0, 150.0), view, big, true), SpaceStep::NextPage);
     }
 }

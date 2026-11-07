@@ -53,7 +53,7 @@ Opening a single image opens its whole folder at that image, as the original did
 | L, Shift+L, Shift+K | Load files; load next / previous file in the folder |
 | R | Resume reading where you left off |
 | P / Shift+P | Go to page: thumbnails / slider |
-| A | Slideshow |
+| A | Slideshow (advances like Space: down, across, then next page) |
 | C | Configure |
 | W / M / X or Esc | Windowed / minimise / exit |
 | F1 / F10 / right-click | Help / menu bar / pop-up menu |
